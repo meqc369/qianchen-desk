@@ -2507,14 +2507,10 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
 }
 
 /// Qianchen Desk: built-in server settings and unattended-access defaults.
-/// These are defaults, so a value saved in the settings page still wins.
+/// Server settings are forced; the rest are defaults, so a value saved in the settings page wins.
 fn apply_qianchen_defaults() {
     let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
     for (k, v) in [
-        (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER, "www.pienv.com"),
-        (keys::OPTION_RELAY_SERVER, "www.pienv.com"),
-        (keys::OPTION_API_SERVER, "https://www.pienv.com:21114"),
-        (keys::OPTION_KEY, "D8u9KJCnAkBwRG6je72oPTVxnHk6oIYXimXfCQJ1jEU="),
         (keys::OPTION_VERIFICATION_METHOD, "use-permanent-password"),
         (keys::OPTION_APPROVE_MODE, "password"),
         // LAN-first connections reach the peer on its direct port (21118).
@@ -2523,6 +2519,19 @@ fn apply_qianchen_defaults() {
         defaults.entry(k.to_owned()).or_insert_with(|| v.to_owned());
     }
     drop(defaults);
+    // Server settings are forced, not defaults: a PC that ran RustDesk before keeps the old
+    // server and key in RustDesk2.toml (same config file), registers somewhere else and shows
+    // up as "ID does not exist" here.
+    let mut overwrite = config::OVERWRITE_SETTINGS.write().unwrap();
+    for (k, v) in [
+        (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER, "www.pienv.com"),
+        (keys::OPTION_RELAY_SERVER, "www.pienv.com"),
+        (keys::OPTION_API_SERVER, "https://www.pienv.com:21114"),
+        (keys::OPTION_KEY, "D8u9KJCnAkBwRG6je72oPTVxnHk6oIYXimXfCQJ1jEU="),
+    ] {
+        overwrite.insert(k.to_owned(), v.to_owned());
+    }
+    drop(overwrite);
     // Full chroma (4:4:4): 4:2:0 smears coloured fringes around text and thin lines.
     config::DEFAULT_DISPLAY_SETTINGS
         .write()
