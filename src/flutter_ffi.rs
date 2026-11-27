@@ -1865,6 +1865,29 @@ pub fn cm_get_clients_length() -> usize {
 pub fn main_init(app_dir: String, custom_client_config: String) {
     initialize(&app_dir, &custom_client_config);
     crate::keyboard::shortcuts::reload_from_config();
+    qc_reset_i444_once();
+}
+
+/// Qianchen Desk: 4:4:4 used to be on by default and every saved device copied that value.
+/// It costs a lot of CPU on weak PCs without a hardware encoder, so turn it off once; it can
+/// still be switched on per session. File times are kept so "recent" keeps its order.
+fn qc_reset_i444_once() {
+    const FLAG: &str = "qc-i444-default-off";
+    if LocalConfig::get_option(FLAG) == "Y" {
+        return;
+    }
+    LocalConfig::set_option(FLAG.to_owned(), "Y".to_owned());
+    for (id, modified, path) in PeerConfig::get_vec_id_modified_time_path(&None) {
+        let mut cfg = PeerConfig::load(&id);
+        if cfg.options.get(keys::OPTION_I444).map(|v| v == "Y") != Some(true) {
+            continue;
+        }
+        cfg.options.insert(keys::OPTION_I444.to_owned(), "".to_owned());
+        cfg.store(&id);
+        if let Ok(f) = std::fs::File::options().write(true).open(&path) {
+            let _ = f.set_modified(modified);
+        }
+    }
 }
 
 pub fn main_device_id(id: String) {
