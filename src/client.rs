@@ -1779,7 +1779,7 @@ impl Client {
         .ok()?;
         // The device picks the request up with its next heartbeat (every 3 s while offline).
         match timeout(
-            25_000,
+            40_000,
             Self::secure_connection(peer, signed_id_pk, key, &mut conn),
         )
         .await

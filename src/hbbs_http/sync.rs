@@ -237,7 +237,13 @@ async fn start_hbbs_sync_async() {
                 }
                 // Qianchen Desk: while the rendezvous server is unreachable over UDP, the heartbeat
                 // is how relay requests reach us, so send it every tick (3 s).
-                let registered = config::get_online_state() > 0;
+                // Qianchen Desk: a device that reaches the ID server only over TCP is not reachable
+                // through it (the open-source hbbs answers TCP registration with NOT_SUPPORT), so it
+                // keeps the fast heartbeat that carries relay requests.
+                let registered = config::get_online_state() > 0
+                    && !crate::is_udp_disabled()
+                    && !config::use_ws()
+                    && !Config::is_proxy();
                 let thumb_ready = QC_THUMB.lock().unwrap().is_some();
                 if registered && conns.is_empty() && QC_ACK.lock().unwrap().is_none() && !thumb_ready && last_sent.map(|x| x.elapsed() < TIME_HEARTBEAT).unwrap_or(false) {
                     continue;
