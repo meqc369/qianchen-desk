@@ -2877,6 +2877,12 @@ pub fn main_get_common(key: String) -> String {
         if key == "qc-sys-stats" {
             return crate::qianchen_stats::snapshot().to_string();
         }
+        if key == "qc-version" {
+            return match crate::updater::qc_build() {
+                0 => format!("v{} · 开发版", crate::VERSION),
+                b => format!("v{} · 构建 {}", crate::VERSION, b),
+            };
+        }
     }
     if key == "is-printer-installed" {
         #[cfg(target_os = "windows")]

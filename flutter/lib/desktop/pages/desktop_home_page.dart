@@ -568,9 +568,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             ClipRRect(
                 borderRadius: BorderRadius.circular(8), child: loadIcon(32)),
             const SizedBox(width: 10),
-            Text('千尘desk',
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('千尘desk',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+              // Qianchen Desk: version and build, to tell whether this PC is up to date.
+              Text(bind.mainGetCommonSync(key: 'qc-version'),
+                  style: TextStyle(fontSize: 11, color: muted)),
+            ]),
           ]),
           const SizedBox(height: 18),
           Text(

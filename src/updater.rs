@@ -105,8 +105,12 @@ pub fn qc_build() -> u64 {
         .unwrap_or(0)
 }
 
-/// A newer build published on our server: (build, url, sha256, size).
-pub fn qc_newer_build() -> ResultType<Option<(u64, String, String, u64)>> {
+/// Qianchen Desk: download mirror in mainland China. version.json still comes from the API
+/// server over HTTPS and carries the SHA-256, so a mirror file is only used if it matches.
+const QC_MIRROR: &str = "https://47.116.179.157/download/";
+
+/// A newer build published on our server: (build, url, mirror url, sha256, size).
+pub fn qc_newer_build() -> ResultType<Option<(u64, String, String, String, u64)>> {
     let current = qc_build();
     if current == 0 {
         return Ok(None); // local developer build
@@ -145,17 +149,21 @@ pub fn qc_newer_build() -> ResultType<Option<(u64, String, String, u64)>> {
     if !u.starts_with(&format!("{}/download/", api.trim_end_matches('/'))) {
         bail!("Refusing update from another host: {}", u);
     }
-    Ok(Some((build, u.to_owned(), sha.to_lowercase(), size)))
+    // Old builds ignore "cn"; it is only trusted on our mirror host.
+    let cn = a["cn"].as_str().filter(|x| x.starts_with(QC_MIRROR)).unwrap_or("").to_owned();
+    Ok(Some((build, u.to_owned(), cn, sha.to_lowercase(), size)))
 }
 
 /// Download and verify a newer build; returns its build number and local path.
 pub fn qc_download_newer() -> ResultType<Option<(u64, std::path::PathBuf, String)>> {
-    let Some((build, url, sha, size)) = qc_newer_build()? else {
+    let Some((build, url, cn, sha, size)) = qc_newer_build()? else {
         return Ok(None);
     };
     let ext = if cfg!(target_os = "windows") { "exe" } else { "dmg" };
     let file_path = std::env::temp_dir().join(format!("qianchendesk-update-{build}.{ext}"));
-    ensure_verified_update_artifact(&url, &file_path, size, &sha)?;
+    if cn.is_empty() || ensure_verified_update_artifact(&cn, &file_path, size, &sha).map_err(|e| log::warn!("Qianchen Desk: mirror download failed, using {url}: {e}")).is_err() {
+        ensure_verified_update_artifact(&url, &file_path, size, &sha)?;
+    }
     Ok(Some((build, file_path, sha)))
 }
 
