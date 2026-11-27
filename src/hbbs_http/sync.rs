@@ -387,6 +387,9 @@ async fn handle_qc_cmd(id: &str, signed: &str, server_now: Option<i64>) {
                 (false, "password change is disabled on this device".to_owned())
             }
         }
+        #[cfg(target_os = "android")]
+        "restart" | "shutdown" => (false, "not supported on Android".to_owned()),
+        #[cfg(not(target_os = "android"))]
         "restart" | "shutdown" => {
             let shutdown = action == "shutdown";
             // Leave time for the acknowledgement heartbeat.
