@@ -2525,7 +2525,7 @@ fn apply_qianchen_defaults() {
     let mut overwrite = config::OVERWRITE_SETTINGS.write().unwrap();
     for (k, v) in [
         (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER, "www.pienv.com"),
-        (keys::OPTION_RELAY_SERVER, "www.pienv.com"),
+        (keys::OPTION_RELAY_SERVER, "47.116.179.157"),
         (keys::OPTION_API_SERVER, "https://www.pienv.com:21114"),
         (keys::OPTION_KEY, "D8u9KJCnAkBwRG6je72oPTVxnHk6oIYXimXfCQJ1jEU="),
     ] {
